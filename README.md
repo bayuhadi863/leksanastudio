@@ -41,6 +41,8 @@ Alasan dan angkanya di [`plans/0005`](plans/0005-rilis-vercel-dan-mode-tanpa-bac
 
 ## Rilis
 
+Tayang di **https://leksanastudio.vercel.app**
+
 ```
 git push  →  GitHub  →  ┬─  GitHub Actions   pemeriksaan (typecheck · lint · build ×2 · build backend)
                         └─  Vercel Git       deploy situs publik

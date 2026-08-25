@@ -98,8 +98,35 @@ Deploy tidak lewat Actions. Integrasi Git milik Vercel sudah melakukannya, dan m
 `VERCEL_TOKEN` ke rahasia repo hanya menambah satu kunci untuk dijaga tanpa menambah
 kemampuan apa pun.
 
-## 6. Yang belum dikerjakan
+## 6. Empat cacat yang hanya muncul setelah di-deploy
+
+Semuanya lolos build. Tidak satu pun bisa ditemukan di mesin sendiri.
+
+1. **`ignoreCommand` mematikan deployment pertama.** `git diff --quiet HEAD^ HEAD -- .`
+   keluar 128 pada komit tanpa induk, dan Vercel membaca kode keluar itu sebagai galat.
+   Parent-nya diperiksa dulu sekarang.
+2. **Fungsi kontak 500 — `ERR_MODULE_NOT_FOUND`.** Paketnya `"type": "module"`, jadi
+   fungsi yang ter-deploy adalah ES module sungguhan dan Node menyelesaikan specifier apa
+   adanya; Vercel mentranspilasi berkas satu per satu, bukan membundel. Rantai impornya
+   diberi ekstensi `.js`.
+3. **Fungsi kontak menggantung sampai 504.** Ekspor `default` dibaca sebagai tanda tangan
+   Node `(req, res) => void`, dan `Response` yang dikembalikan darinya dibuang — tidak ada
+   yang pernah menjawab permintaannya. Diganti jadi ekspor bernama `POST`.
+4. **Sitemap dan robots selalu menyebut domain placeholder.** Keduanya dibuat plugin Vite
+   yang berjalan di Node, tempat `import.meta.env` kosong, jadi `site.url` selalu jatuh ke
+   nilai cadangan. Env dibaca di `vite.config` lalu diserahkan sebagai argumen.
+
+Yang menemukan ketiga cacat terakhir bukan build, melainkan memanggil endpoint-nya dan
+membaca log runtime setelah tayang. Build hijau tidak berarti apa-apa untuk kode yang
+baru berjalan saat ada yang memanggilnya.
+
+## 7. Yang belum dikerjakan
 
 - Situs masih membaca MDX dan berkas config, bukan API. Rencananya tetap [0003](0003-cms-konten.md) §8.
 - Backend belum di-deploy ke mana pun. Panel berjalan lokal.
-- Domain `leksana.id` belum dipasang ke proyek Vercel.
+- Domain `leksana.id` belum dipasang ke proyek Vercel. Sampai itu terjadi,
+  `frontend/.env.production` menyebut alamat vercel.app — satu baris untuk diubah.
+- GitHub Actions sudah terdaftar tapi belum pernah berjalan (0 run untuk `ci.yml`).
+  Kemungkinan besar Actions dimatikan di level repo/akun: Settings → Actions → General.
+- Kunci Resend dan Fonnte belum diisi di Vercel, jadi kiriman formulir dicatat tetapi
+  belum mengirim notifikasi.
