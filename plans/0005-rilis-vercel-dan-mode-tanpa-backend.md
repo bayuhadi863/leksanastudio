@@ -89,6 +89,11 @@ git push  →  GitHub  →  ┬─  GitHub Actions  ·  typecheck, lint, build �
                                                 VITE_PANEL tidak diisi → situs publik saja
 ```
 
+`ignoreCommand` harus tahan komit pertama. Versi awalnya `git diff --quiet HEAD^ HEAD -- .`
+dan deployment pertama langsung gagal — `HEAD^` tidak ada pada komit tanpa induk, keluar
+dengan kode 128, dan Vercel menganggap itu galat, bukan "bangun saja". Sekarang parent-nya
+diperiksa lebih dulu; kalau tidak ada, perintahnya gagal dengan sengaja dan buildnya jalan.
+
 Deploy tidak lewat Actions. Integrasi Git milik Vercel sudah melakukannya, dan menambah
 `VERCEL_TOKEN` ke rahasia repo hanya menambah satu kunci untuk dijaga tanpa menambah
 kemampuan apa pun.
