@@ -1,0 +1,103 @@
+---
+title: 'Ketika proxy kampus hanya mengizinkan GET dan POST'
+summary: 'Kode benar, tes lolos, lokal jalan, produksi mati. Cerita tentang dua batasan lingkungan yang tidak muncul di tutorial mana pun, dan kenapa saya memilih menambal di dua ujung alih-alih merusak desain API.'
+published: '2026-08-20'
+pillar: 'keputusan'
+---
+
+Ada kelas kegagalan yang tidak diajarkan di mana pun: kode Anda benar, tes lolos, lokal jalan
+sempurna, lalu di produksi separuh aplikasinya mati tanpa satu pun galat yang masuk akal.
+
+Saya menemuinya di sebuah sistem informasi kampus. Dua batasan, ditemukan dalam minggu yang
+sama, dan keduanya milik lingkungan — bukan milik kode.
+
+## Batasan pertama: separuh metode HTTP dibuang
+
+Sistem harus berjalan di balik reverse proxy institusi. Proxy itu meneruskan `GET`, `HEAD`, dan
+`POST`. Tidak yang lain.
+
+Untuk aplikasi REST, artinya:
+
+```
+POST   /api/v1/user      → 200 OK
+PUT    /api/v1/user/{id} → tidak pernah sampai
+PATCH  /api/v1/user/{id} → tidak pernah sampai
+DELETE /api/v1/user/{id} → tidak pernah sampai
+```
+
+Seluruh operasi ubah dan hapus, di seluruh sistem, mati sekaligus.
+
+Pilihan pertama yang terlintas adalah meminta administrator jaringan membuka metode lainnya.
+Itu bukan pilihan yang realistis, dan penting untuk memahami kenapa: kebijakan itu berlaku
+untuk seluruh aplikasi di lingkungan tersebut. Permintaan saya bukan "tolong ubah konfigurasi",
+melainkan "tolong ubah kebijakan keamanan seluruh kampus untuk satu aplikasi". Jawaban yang
+benar untuk permintaan seperti itu memang tidak.
+
+## Batasan kedua: firewall menolak HTML di badan permintaan
+
+Sistemnya punya editor teks kaya untuk berita dan pengumuman. Isinya HTML.
+
+Firewall aplikasi di depan proxy membaca HTML di dalam badan permintaan sebagai percobaan
+injeksi, dan menolaknya sebelum sampai ke aplikasi. Jadi menyimpan satu berita saja gagal —
+padahal di lokal berhasil sempurna, karena di lokal tidak ada firewall.
+
+Gabungan dua hal ini adalah kombinasi yang paling melelahkan untuk didiagnosis: gejalanya
+hanya muncul di tempat yang paling sulit Anda periksa.
+
+## Yang saya pilih, dan yang saya tolak
+
+Ada dua jalan.
+
+**Jalan pertama: mengubah desain API.** Jadikan semuanya `POST`. `/user/update`, `/user/delete`,
+`/user/create`. Sederhana, langsung jalan, selesai dalam sehari.
+
+**Jalan kedua: pertahankan REST, tambahkan penerjemah di kedua ujung.** Frontend mengirim
+`PUT`/`PATCH`/`DELETE` sebagai `POST` dengan header `X-HTTP-Method-Override`. Backend membaca
+header itu sebelum routing, sehingga controller tetap melihat metode aslinya.
+
+Saya memilih jalan kedua, dan alasannya bukan kemurnian.
+
+Kendala ini milik **satu lingkungan**, bukan milik sistemnya. Proxy bisa berubah tahun depan.
+Institusinya bisa memindahkan aplikasi ke tempat lain. Lapisan penerjemah bisa dicabut dalam
+satu jam — cukup hapus satu fungsi di frontend dan satu baris di pipeline backend. API yang
+sudah terlanjur salah bentuk tidak bisa dicabut; ia harus dimigrasikan, bersama setiap klien
+yang sudah memakainya.
+
+Untuk HTML di badan permintaan, jalan yang sama: seluruh badan JSON dikirim ter-encode base64
+dengan penanda header, dan sebuah middleware membuka encoding-nya sebelum permintaan mencapai
+model binding.
+
+Alternatifnya adalah meminta pengecualian firewall untuk endpoint tertentu. Saya menolak itu
+dengan alasan yang berbeda: pengecualian firewall adalah utang keamanan yang dibayar orang
+lain, di kemudian hari, tanpa mereka tahu kenapa pengecualian itu ada.
+
+## Harganya, dan kenapa harganya ditulis
+
+Solusi ini punya sifat yang berbahaya: **ia terdiri dari dua bagian yang harus selalu diubah
+berpasangan.**
+
+Kalau seseorang menghapus penerjemah di frontend tanpa menyentuh backend, seluruh operasi tulis
+di produksi mati. Kalau seseorang memindahkan penanganan override ke tempat yang salah di
+pipeline, hasilnya sama. Dan di kedua kasus itu, pengembangan lokal tetap jalan sempurna —
+jadi tidak ada yang menyadarinya sampai ada pengguna yang gagal menyimpan.
+
+Karena itu bagian ini tidak hanya ditulis di kode. Ia ditulis di dokumentasi serah terima,
+dengan kalimat yang sengaja tidak sopan: _mengubah satu sisi tanpa sisi lain akan mematikan
+seluruh operasi tulis di produksi, dan gejalanya tidak akan muncul saat pengembangan lokal._
+
+Solusi yang pintar tanpa penjelasan bukan solusi. Ia jebakan yang dipasang untuk orang
+berikutnya.
+
+## Pelajaran yang benar-benar saya bawa
+
+Bukan soal `X-HTTP-Method-Override`. Itu detail yang mungkin tidak akan pernah Anda butuhkan.
+
+Yang saya bawa adalah ini: **kedua batasan itu bisa ditemukan dalam satu jam, di hari pertama.**
+Satu permintaan `PUT` uji coba ke lingkungan target, satu permintaan `POST` berisi tag HTML.
+Dua puluh menit kerja, sebelum baris fitur pertama ditulis.
+
+Saya menemukannya di minggu kelima.
+
+Sekarang setiap proyek yang akan tinggal di infrastruktur milik orang lain saya mulai dengan
+satu deploy kosong ke sana. Bukan untuk memastikan aplikasinya jalan — aplikasinya belum ada.
+Untuk mencari tahu apa saja yang tidak diizinkan tempat itu.

@@ -1,0 +1,8 @@
+# Build context = backend/
+**/bin
+**/obj
+**/.vs
+**/*.user
+**/.git
+# Dev secrets never go into the image — production reads config from env vars.
+src/appsettings.Development.json

@@ -1,0 +1,14 @@
+# One line ending in the repository, whatever the machine that wrote it.
+* text=auto eol=lf
+
+# Binary, so Git never tries to "fix" them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.woff2 binary
+*.pdf binary
+
+# Generated: keep them out of diff noise and out of language statistics.
+package-lock.json linguist-generated=true -diff

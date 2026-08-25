@@ -1,0 +1,209 @@
+---
+title: 'Situs ini — studio yang harus jadi barang buktinya sendiri'
+label: 'produk-sendiri'
+client: 'Leksana Studio'
+kind: 'Situs studio'
+figure: 'website'
+summary: 'Situs jasa yang dinilai lebih dulu daripada dibaca. Dibangun tanpa satu pun skrip pihak ketiga, tanpa foto stok, dan dengan seluruh anggaran gerak dibelanjakan pada satu elemen.'
+problem: 'Situs studio adalah barang bukti pertama. Kalau lambat atau berantakan di HP, tidak ada satu pun klaim di dalamnya yang dipercaya.'
+year: 2026
+duration: '2 minggu'
+role: 'Desain dan pengembangan'
+stack:
+  - 'Next.js 15'
+  - 'TypeScript'
+  - 'Tailwind CSS 4'
+  - 'MDX'
+  - 'Vercel'
+metrics:
+  - value: '0'
+    label: 'Skrip pihak ketiga'
+  - value: '5'
+    label: 'Berkas huruf'
+  - value: '~65'
+    label: 'Karakter per baris'
+updated: '2026-08-23'
+order: 2
+---
+
+<Note>
+  Ini bukan pekerjaan untuk klien, dan saya tidak menuliskannya seolah begitu. Yang membuatnya tetap
+  layak ditampilkan adalah keputusannya bisa diperiksa — halaman yang sedang Anda baca inilah
+  hasilnya.
+</Note>
+
+## Masalah
+
+Situs studio punya satu pekerjaan yang tidak dimiliki situs klien: **ia adalah barang buktinya
+sendiri.** Calon klien menilai kemampuan saya dari situs ini sebelum membaca satu kalimat pun.
+Kalau situsnya lambat, berantakan di HP, atau tampak seperti template yang diganti warnanya,
+setiap klaim di dalamnya batal.
+
+Masalah kedua lebih halus. Saya menjual jasa sebagai generalis — website bisnis, website
+perusahaan, dan sistem web. Generalis punya satu kegagalan yang bisa diprediksi: tanpa alasan
+spesifik untuk dipilih, satu-satunya sumbu perbandingan yang tersisa adalah harga.
+
+## Batasan yang saya tetapkan sendiri
+
+Batasan di sini bukan datang dari luar. Ini aturan yang saya pilih supaya hasilnya tidak
+hanyut ke tampilan bawaan begitu ada tekanan waktu.
+
+- **Nol foto stok, nol mockup 3D.** Foto orang tersenyum di depan laptop menghapus
+  kredibilitas dalam satu detik.
+- **Nol skrip pihak ketiga.** Tidak ada widget chat, tidak ada sematan Instagram, tidak ada
+  pustaka animasi. Satu-satunya skrip inline adalah 141 byte milik sendiri yang memasang
+  pilihan tampilan sebelum cat pertama.
+- **Nol nilai warna di dalam komponen.** Semuanya lewat token semantik.
+- **Maksimal tiga peran huruf.** Judul, antarmuka, data.
+- **Keberanian desain dibelanjakan pada satu elemen saja.** Sisanya tenang.
+
+## Keputusan
+
+<Decision
+  step={1}
+  title="Bahasa visualnya diambil dari benda yang benar-benar saya serahkan"
+  chose="tampilan dokumen kerja"
+  because="yang membedakan saya adalah alasan tiap keputusan ditulis dan diserahkan"
+  despite="brosur agensi jauh lebih mudah dibuat dan lebih aman secara selera"
+>
+
+Klien terakhir saya menerima tiga belas dokumen teknis dan satu buku PDF bersama sistemnya.
+Itu pembedanya. Kalau begitu, itu juga yang harus terlihat sebelum satu kalimat pun dibaca.
+
+Tiga arah lain saya pertimbangkan serius lalu tolak. **Cetak biru teknik** — kertas milimeter
+sudah jadi klise portofolio developer; ia meniru gambar insinyur, bukan kerjanya. **Dasbor
+status** — angka berjalan dan lampu hijau membaca sebagai produk berlangganan, padahal saya
+menjual jasa. **Editorial surat kabar** — rapi dan dewasa, tetapi muncul di ribuan situs dan
+tidak mengatakan apa pun tentang studio ini.
+
+</Decision>
+
+<Decision
+  step={2}
+  title="Catatan pinggir sebagai satu-satunya elemen berani"
+  chose="anotasi orang pertama di margin luar"
+  because="ia mengubah klaim 'saya dokumentasikan alasan keputusan' menjadi struktur halaman"
+  despite="ia menambah kerumitan tata letak dan menuntut disiplin menulis"
+>
+
+Catatan pinggir memuat alasan, keberatan, atau batas — tidak pernah fitur, tidak pernah ajakan
+membeli. Aturannya keras: maksimal empat per halaman, dua puluh sampai empat puluh lima kata,
+selalu orang pertama. Kalau sebuah catatan bisa ditulis oleh siapa saja, catatan itu dibuang.
+
+Ia juga melayani dua audiens sekaligus. Pemilik bisnis mendapat kejujuran dan kehangatan;
+pengambil keputusan institusi mendapat kedalaman — tanpa kolom utama menjadi padat.
+
+<Note>
+  Secara teknis, catatan dan paragrafnya adalah satu baris grid. Itu terdengar sepele, tapi
+  pendekatan float yang biasa dipakai untuk sidenote membuat catatan mendarat di sebelah paragraf
+  berikutnya, bukan paragraf yang dianotasi.
+</Note>
+
+</Decision>
+
+<Decision
+  step={3}
+  title="Merah oxblood, di atas kertas abu kebiruan"
+  chose="warna cap dokumen resmi sebagai satu-satunya aksen"
+  because="ia serius tanpa jadi dingin, dan berbeda dari hampir semua situs jasa web lokal"
+  despite="biru korporat akan terasa lebih aman bagi calon klien institusi"
+>
+
+Latar bukan putih dan bukan krem hangat. Krem hangat dengan aksen terakota adalah seragam
+desain yang sedang muncul di mana-mana; abu kebiruan membaca sebagai kertas kerja, dan memberi
+ketegangan yang enak melawan aksen hangat.
+
+Teksnya biru-hitam, tidak pernah hitam murni — tinta, bukan warna layar. Anggaran pemakaian
+aksen ditulis sebagai aturan: di bawah lima persen permukaan. Kalau warna aksen terlihat di
+lebih dari tiga tempat pada satu layar, ada yang harus dilepas.
+
+</Decision>
+
+<Decision
+  step={4}
+  title="Spectral, Public Sans, DM Mono"
+  chose="serif teks untuk judul dan huruf sistem desain pemerintah untuk isi"
+  because="dokumen resmi Indonesia dibaca dengan serif dan diisi dengan sans"
+  despite="pasangan huruf bawaan akan menghemat sehari kerja"
+>
+
+Spectral adalah serif teks yang dirancang untuk layar — karakternya kering dan tegas, huruf
+dokumen dan bukan huruf iklan. Public Sans berasal dari sistem desain pemerintah Amerika
+Serikat, dibuat untuk keterbacaan formulir dan dokumen publik; register "resmi tapi jelas"
+itu persis yang dibutuhkan.
+
+Anggarannya ditetapkan lebih dulu: maksimal lima berkas, subset latin, dua di antaranya
+di-preload. DM Mono adalah yang pertama dikorbankan kalau anggaran performa terancam.
+
+</Decision>
+
+<Decision
+  step={5}
+  title="Gerak tanpa satu baris JavaScript"
+  chose="animasi berbasis scroll milik CSS, dengan fallback diam"
+  because="satu-satunya animasi di situs ini hanya melayani catatan pinggir"
+  despite="dukungan perambannya belum merata"
+>
+
+Catatan pinggir muncul dengan pudar dan geser enam piksel saat paragrafnya masuk layar. Di
+peramban yang belum mendukungnya, catatan itu sekadar terlihat sejak awal — tidak ada yang
+hilang, dan tidak ada JavaScript yang diunduh siapa pun untuk sesuatu yang bersifat hiasan.
+
+Yang tidak ada di situs ini, dan memang disengaja: parallax, angka yang menghitung naik,
+kursor kustom, kartu yang terangkat saat disentuh kursor, dan animasi berurutan saat halaman
+dimuat.
+
+</Decision>
+
+<Decision
+  step={6}
+  title="Kendali tampilan diberikan ke pembaca, bukan ke perangkatnya saja"
+  chose="tiga status — terang, sistem, gelap"
+  because="menjual 'saya serahkan kendalinya ke Anda' lalu menahan kendali baca adalah kontradiksi"
+  despite="itu menambah satu skrip inline dan satu komponen klien ke situs yang sengaja dijaga tipis"
+>
+
+Awalnya situs ini hanya mengikuti pengaturan perangkat, dan saya membenarkannya dengan
+aturan "lepas satu aksesori sebelum keluar rumah". Itu keliru: aturan tersebut berlaku
+untuk hiasan, bukan untuk kontrol.
+
+Yang tetap saya jaga adalah bentuknya. **Tiga status, bukan dua** — "Sistem" adalah
+preferensi nyata, dan saklar biner membuang pilihan yang sudah dibuat pembaca di
+perangkatnya. Memilih "Sistem" menghapus atribut dan menghapus kunci penyimpanannya,
+jadi tidak ada sisa yang tertinggal.
+
+Label kata, bukan ikon matahari dan bulan. Ikon itu bawaan yang muncul di mana-mana dan
+menuntut pembaca menebak; tiga kata mono tidak.
+
+</Decision>
+
+<Decision
+  step={7}
+  title="Gambar diganti skema"
+  chose="diagram SVG yang digambar dengan token warna"
+  because="dokumen teknis mengilustrasikan dirinya dengan diagram, bukan foto"
+  despite="tangkapan layar asli akan lebih meyakinkan bagi sebagian orang"
+>
+
+Ada alasan praktis di baliknya juga: tangkapan layar panel administrasi milik klien tidak bisa
+diterbitkan tanpa menyensor justru bagian yang membuatnya menarik. Skema menyelesaikan keduanya
+sekaligus — ia jujur, terbaca di mode terang maupun gelap, dan tidak memakan satu permintaan
+jaringan pun.
+
+</Decision>
+
+## Cara memeriksanya
+
+Situs ini tidak meminta Anda percaya pada klaim kecepatannya. Buka alat pengukur mana pun,
+masukkan alamat halaman ini, dan bandingkan dengan situs jasa web lain yang sedang Anda
+pertimbangkan. Itu bagian dari maksud dibangunnya.
+
+## Yang saya lakukan berbeda kalau mengulang
+
+**Menulis daftar yang ditolak sebelum menulis daftar yang dipakai.** Arah desain yang buruk
+biasanya bukan dipilih — ia hanyut masuk karena tidak ada yang pernah menuliskan bahwa ia
+tidak boleh masuk.
+
+**Menetapkan anggaran huruf sebelum memilih hurufnya.** Saya sempat menimbang pasangan yang
+butuh tujuh berkas. Anggaran yang ditulis lebih dulu membuat keputusannya selesai dalam lima
+menit, bukan setengah hari.

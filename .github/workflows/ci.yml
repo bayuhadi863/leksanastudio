@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push makes an older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend — typecheck, lint, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm run lint
+
+      # Both shapes are built on purpose. The public deployment ships without
+      # the panel, and the panel build is the one running locally against the
+      # API — a change that breaks either one should fail here, not later.
+      - name: Build — situs publik (tanpa panel)
+        run: npm run build
+
+      - name: Build — dengan panel
+        run: npm run build
+        env:
+          VITE_PANEL: 'on'
+
+  backend:
+    name: Backend — build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore backend/leksana-studio-backend.sln
+
+      - name: Build
+        run: dotnet build backend/leksana-studio-backend.sln -c Release --no-restore
+
+      # A vulnerable package is a deployment problem, and it is cheaper to hear
+      # about it here than from someone else.
+      - name: Audit paket
+        run: dotnet list backend/leksana-studio-backend.sln package --vulnerable --include-transitive

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      Type is served from this origin — declared in src/styles/globals.css,
+      files in /public/fonts. Nothing here reaches a third party.
+
+      The two faces that set the first paint are preloaded; the rest arrive
+      with the stylesheet.
+    -->
+    <link
+      rel="preload"
+      href="/fonts/public-sans-variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="preload" href="/fonts/spectral-600.woff2" as="font" type="font/woff2" crossorigin />
+
+    <meta name="theme-color" content="#eff1f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#151b22" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>Leksana Studio — Website &amp; sistem web</title>
+    <!--
+      Defaults for a reader (or a crawler) that arrives before React has run.
+      `data-page-meta` marks them as replaceable: the first render swaps them
+      for the tags belonging to the page actually being viewed.
+    -->
+    <meta
+      data-page-meta
+      name="description"
+      content="Studio web dan sistem web di Surabaya. Saya membangun website dan aplikasi web yang dirancang untuk dipakai bertahun-tahun — lengkap dengan dokumentasi dan serah terima penuh."
+    />
+    <meta data-page-meta property="og:type" content="website" />
+    <meta data-page-meta property="og:site_name" content="Leksana Studio" />
+    <meta data-page-meta property="og:locale" content="id_ID" />
+    <meta data-page-meta property="og:image" content="/og.svg" />
+    <meta data-page-meta name="twitter:card" content="summary_large_image" />
+
+    <!-- theme-init-script: injected before first paint by vite.config.ts -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

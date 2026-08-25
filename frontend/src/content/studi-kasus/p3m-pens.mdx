@@ -1,0 +1,291 @@
+---
+title: 'Sistem informasi untuk unit penelitian politeknik negeri'
+label: 'klien'
+client: 'P3M — Politeknik Elektronika Negeri Surabaya'
+kind: 'Sistem informasi'
+figure: 'system'
+cover:
+  src: '/portofolio/p3m-pens-cover.png'
+  alt: 'Dasbor panel administrasi P3M: ringkasan jumlah penelitian, publikasi, dan pengabdian, diikuti daftar pengajuan yang menunggu verifikasi'
+summary: 'Situs publik dan panel administrasi dalam satu sistem: 30 modul, 34 entitas, empat peran, dan lima alur pengajuan dengan verifikasi. Dikerjakan sendiri dalam enam minggu, di lingkungan kampus yang membatasi separuh metode HTTP.'
+problem: 'Lima alur pengajuan yang sebelumnya berjalan lewat berkas dan pesan pribadi, tanpa satu tempat pun yang bisa menjawab "sekarang di tahap mana".'
+year: 2026
+duration: '6 minggu'
+role: 'Pengembang tunggal — analisis, basis data, backend, frontend, infrastruktur, deployment, dokumentasi'
+stack:
+  - 'React 19'
+  - 'TypeScript'
+  - 'Vite'
+  - 'Tailwind CSS'
+  - 'ASP.NET Core 9'
+  - 'Entity Framework Core'
+  - 'PostgreSQL'
+  - 'Redis'
+  - 'MinIO'
+  - 'Docker'
+  - 'Caddy'
+metrics:
+  - value: '30'
+    label: 'Modul'
+  - value: '34'
+    label: 'Entitas'
+  - value: '~73.000'
+    label: 'Baris kode'
+updated: '2026-08-23'
+order: 1
+---
+
+## Masalah
+
+P3M adalah unit yang mengurus seluruh penelitian, publikasi, dan pengabdian masyarakat di
+sebuah politeknik negeri. Sebelum sistem ini ada, dua hal berjalan terpisah dan keduanya
+bermasalah.
+
+**Wajah publiknya tersebar.** Capaian penelitian, publikasi, katalog luaran, berita, panduan
+kegiatan, dan struktur organisasi tersimpan di tempat yang berbeda-beda — sebagian di
+dokumen, sebagian di halaman yang tidak bisa diperbarui sendiri oleh staf. Setiap perubahan
+kecil harus lewat orang lain.
+
+**Alur internalnya tidak punya tempat.** Pengajuan dana registrasi konferensi, pengajuan
+dana publikasi, pengajuan SK mandiri, klaim buku, dan klaim HKI — lima alur berbeda, masing-
+masing dengan berkas pendukung, verifikator, dan status revisi sendiri. Semuanya berjalan
+lewat berkas dan pesan pribadi. Tidak ada satu tempat pun yang bisa menjawab pertanyaan
+paling sederhana: _pengajuan saya sekarang di tahap mana?_
+
+<Metrics
+  items={[
+    { value: '27', label: 'Menu' },
+    { value: '5', label: 'Alur pengajuan' },
+    { value: '4', label: 'Peran pengguna' },
+  ]}
+/>
+
+## Batasan yang membuat proyek ini tidak biasa
+
+Bagian ini adalah inti dari studi kasus, dan bagian yang paling sering dilewatkan orang saat
+menceritakan pekerjaannya. Bukan fiturnya yang sulit — melainkan tempat sistem ini harus hidup.
+
+<Annotation note="Dua batasan pertama baru saya temukan menjelang deployment. Sekarang setiap proyek yang akan tinggal di infrastruktur orang lain saya mulai dengan satu deploy kosong ke sana, sebelum fitur pertama ditulis.">
+
+### 1. Proxy kampus hanya meneruskan GET, HEAD, dan POST
+
+Sistem harus berjalan di balik proxy institusi yang membuang PUT, PATCH, dan DELETE. Untuk
+aplikasi REST, artinya seluruh operasi ubah dan hapus tidak bisa dilakukan sama sekali.
+
+Menuntut perubahan konfigurasi proxy bukan pilihan yang realistis: kebijakan itu berlaku
+untuk semua aplikasi di lingkungan tersebut, bukan hanya milik saya.
+
+### 2. Firewall menolak HTML di badan permintaan
+
+Sistem punya editor teks kaya untuk berita, pengumuman, dan halaman publik. Isinya HTML.
+Firewall aplikasi di depan proxy membaca HTML dalam badan permintaan sebagai percobaan
+injeksi dan menolaknya — jadi menyimpan satu berita saja gagal di produksi, padahal berhasil
+sempurna di lokal.
+
+</Annotation>
+
+Kombinasi keduanya adalah kelas masalah yang tidak muncul di tutorial mana pun: kode benar,
+lokal jalan, produksi mati.
+
+### 3. Autentikasi harus menumpang akun kampus, tanpa menggantikannya
+
+Dosen dan karyawan sudah punya akun institusi. Meminta mereka mendaftar ulang akan membunuh
+adopsi sebelum sistemnya sempat dipakai. Tetapi sistem juga butuh pengguna lokal — admin dan
+anggota unit — yang tidak ada di direktori kampus.
+
+### 4. Hak akses harus bisa diubah tanpa deploy ulang
+
+Struktur organisasi unit seperti ini berubah tiap periode. Kalau setiap perubahan hak akses
+berarti mengubah kode dan menunggu deploy, sistemnya akan ditinggalkan dalam setahun.
+
+### 5. Dikerjakan sendiri, dari basis data sampai TLS
+
+Tidak ada tim backend, tidak ada DevOps, tidak ada QA. Setiap keputusan arsitektur harus
+dinilai juga dari sisi lain: _apakah saya sanggup merawat ini sendirian setahun lagi?_
+
+## Keputusan
+
+<Decision
+  step={1}
+  title="Menyelundupkan metode yang diblokir lewat POST, bukan mengubah desain API"
+  chose="mempertahankan REST yang benar dan menambahkan lapisan penerjemah di kedua ujung"
+  because="kendala ini milik satu lingkungan, bukan milik sistemnya"
+  despite="itu berarti dua mekanisme yang harus selalu diubah berpasangan"
+>
+
+Frontend mengirim PUT, PATCH, dan DELETE sebagai POST dengan header `X-HTTP-Method-Override`.
+Backend memasang penanganan override sebelum routing, sehingga controller tetap melihat
+metode aslinya.
+
+Alternatif yang ditolak: mengubah semua endpoint menjadi POST (`/user/update`, `/user/delete`).
+Lebih sederhana untuk dikirim, tetapi merusak semantik API selamanya demi satu kendala
+lingkungan yang mungkin hilang tahun depan. Lapisan penerjemah bisa dicabut dalam satu jam;
+API yang terlanjur salah bentuk tidak bisa.
+
+Harganya saya tuliskan di dokumentasi: mengubah satu sisi tanpa sisi lain akan mematikan
+**seluruh** operasi tulis di produksi — dan gejalanya tidak akan muncul saat pengembangan lokal.
+
+</Decision>
+
+<Decision
+  step={2}
+  title="Meng-encode badan permintaan sebagai base64 ketika mengandung HTML"
+  chose="base64 di seluruh badan JSON dengan penanda header"
+  because="editor teks kaya adalah alasan sistem ini menggantikan proses lama"
+  despite="ukuran permintaan bertambah sekitar sepertiga dan isinya tidak lagi terbaca di alat inspeksi"
+>
+
+Alternatif yang ditolak ada dua. Meminta pengecualian firewall untuk endpoint tertentu —
+bergantung pada pihak lain, dan pengecualian firewall adalah utang keamanan yang dibayar
+orang lain di kemudian hari. Atau menyimpan konten sebagai teks polos — yang berarti membuang
+fitur yang justru menjadi alasan sistem ini dibangun.
+
+</Decision>
+
+<Decision
+  step={3}
+  title="Hak akses sebagai data, bukan sebagai kode"
+  chose="menyimpan izin per pasangan peran dan menu di basis data"
+  because="struktur organisasi berubah lebih sering daripada kode"
+  despite="lapisan otorisasinya jadi lebih rumit untuk ditulis di awal"
+>
+
+Setiap pasangan peran × menu menyimpan lima bendera — lihat, tambah, ubah, hapus, verifikasi —
+ditambah daftar aksi khusus seperti verifikasi dan hapus-milik-siapa-pun. Backend menegakkannya
+lewat filter otorisasi global; frontend membaca izin yang sama hanya untuk menyembunyikan
+tombol. Backend tetap satu-satunya otoritas.
+
+Konsekuensi yang memang saya inginkan: administrator mengubah hak akses lewat antarmuka.
+Tidak ada deploy, dan tidak ada saya.
+
+Alternatif yang ditolak: atribut peran di controller. Jauh lebih cepat ditulis, dan setiap
+perubahan struktur organisasi berubah menjadi tiket untuk saya.
+
+<Note>
+  Satu detail yang saya anggap penting: ketika pengguna punya beberapa peran, akses dilingkupi ke
+  satu peran aktif yang dipilih saat masuk — bukan gabungan semuanya. Gabungan peran membuat
+  pengguna tak pernah bisa menjawab "kenapa saya bisa melihat ini", dan membuat audit hampir
+  mustahil.
+</Note>
+
+</Decision>
+
+<Decision
+  step={4}
+  title="Satu aplikasi React untuk situs publik dan panel admin"
+  chose="menyatukan keduanya dalam satu basis kode"
+  because="pratinjau editor halaman jadi benar-benar akurat, bukan perkiraan"
+  despite="bundel awalnya lebih besar"
+>
+
+Situs publik berada di `/`, panel administrasi di `/app`. Komponen yang merender halaman
+publik persis sama dengan yang merender pratinjau di editor — jadi yang dilihat admin saat
+menyunting memang yang dilihat pengunjung.
+
+Harga bundelnya dibayar dengan pemuatan bertahap per modul, sehingga pengunjung publik tidak
+pernah mengunduh satu baris pun kode panel administrasi.
+
+</Decision>
+
+<Figure
+  src="/portofolio/p3m-pens-03.png"
+  variant="system"
+  alt="Editor halaman depan: formulir konten di kiri, pratinjau langsung situs publik di kanan"
+  caption="Editor halaman depan. Panel kanan bukan perkiraan — ia merender komponen yang sama persis dengan yang dilihat pengunjung."
+/>
+
+<Decision
+  step={5}
+  title="Kelas dasar mengerjakan pekerjaan berulang, bukan generator kode"
+  chose="pewarisan kelas dasar untuk CRUD, pengajuan, dan impor"
+  because="dengan 27 menu dan lima alur yang mirip, selisihnya adalah selisih antara selesai dan tidak selesai"
+  despite="pewarisan menuntut disiplin supaya tidak berubah jadi hierarki yang membingungkan"
+>
+
+Modul CRUD baru mewarisi kelas dasar controller, service, dan repository. Modul pengajuan
+mewarisi turunan yang sudah membawa alur verifikasi. Registrasi dependensi dipindai otomatis,
+jadi modul baru tidak butuh satu baris pun konfigurasi manual.
+
+Ini keputusan bisnis, bukan keputusan gaya: selisih antara menyalin empat ratus baris per
+modul dan mewarisi lalu menimpa tiga metode adalah selisih antara proyek yang selesai dalam
+enam minggu dan proyek yang tidak pernah selesai.
+
+</Decision>
+
+<Decision
+  step={6}
+  title="Berkas tidak pernah disajikan lewat URL penyimpanan"
+  chose="mengalirkan byte-nya lewat endpoint yang memeriksa izin"
+  because="dokumen pengajuan berisi data pribadi dosen"
+  despite="beban servernya lebih besar daripada menyerahkan tautan langsung"
+>
+
+Semua berkas — PDF pengajuan, gambar, katalog — tersimpan di object storage dan hanya bisa
+diambil lewat endpoint aplikasi. URL penyimpanan tidak pernah sampai ke peramban.
+
+URL penyimpanan yang bocor berarti dokumen pengajuan bisa diakses siapa pun yang memegang
+tautannya, selamanya. Untuk berkas berisi data pribadi, itu bukan risiko yang bisa diterima.
+
+</Decision>
+
+## Hasil
+
+<Figure
+  src="/portofolio/p3m-pens-02.png"
+  variant="website"
+  alt="Halaman depan publik P3M PENS: judul lembaga, tombol kontak, dan foto gedung kampus"
+  caption="Halaman depan publik. Seluruh isinya — slide, pengumuman, berita, video profil — disunting sendiri oleh staf lewat editor di atas."
+/>
+
+Yang berjalan hari ini:
+
+- Situs publik lengkap — profil, capaian penelitian dan publikasi, katalog, berita, pengumuman,
+  panduan dan kalender kegiatan, research group, layanan, struktur anggota, dan kerja sama
+  industri — seluruhnya dapat disunting sendiri oleh staf, termasuk susunan halaman depannya.
+- Panel administrasi dengan 27 menu dan empat peran.
+- Lima alur pengajuan dengan status, catatan verifikator, revisi, dan lampiran berkas.
+- Masuk dengan akun kampus untuk dosen dan karyawan; akun lokal untuk pengelola.
+- Ekspor tabel ke PDF, Excel, dan CSV; impor massal dari Excel untuk data penelitian,
+  publikasi, dan pengabdian.
+- Migrasi dan pengisian data awal berjalan otomatis saat aplikasi dinyalakan — memasang ulang
+  dari nol tidak butuh satu langkah manual pun.
+- Deployment terotomasi lewat CI mandiri, TLS otomatis, dan pemeriksaan kesehatan untuk basis
+  data, cache, dan penyimpanan berkas.
+
+### Serah terima
+
+Tiga belas dokumen teknis berbahasa Indonesia — arsitektur, panduan memulai, referensi API,
+model data, keamanan, deployment, operasional, konvensi kode, pemecahan masalah, glosarium —
+plus satu versi buku PDF. Termasuk tutorial _cara menambah modul baru_ untuk backend dan
+frontend, supaya pengembang berikutnya tidak perlu bertanya kepada saya.
+
+### Skor halaman publik
+
+<Annotation note="Angka mobile-nya 68. Penyebabnya aplikasi SPA di server institusi tanpa CDN, ditambah throttling jaringan 4G yang dipakai alat ukurnya. Saya tulis di sini supaya tidak terlihat seperti ada yang disembunyikan.">
+
+| Kategori        | Skor |
+| --------------- | ---- |
+| Performa        | 94   |
+| Aksesibilitas   | 91   |
+| Praktik terbaik | 100  |
+| SEO             | 100  |
+
+PageSpeed Insights, **desktop**, 23 Agustus 2026. Diukur pada lingkungan hosting institusi
+yang tidak saya kendalikan.
+
+</Annotation>
+
+## Yang saya lakukan berbeda kalau mengulang
+
+**Menguji di balik proxy sejak minggu pertama, bukan menjelang deployment.** Dua batasan proxy
+baru terlihat setelah sebagian besar sistem selesai. Keduanya bisa ditemukan dalam satu jam
+dengan satu permintaan uji ke lingkungan target di hari pertama.
+
+**Menulis tes untuk lapisan izin lebih awal.** Proyek berjalan dengan proyek tes yang masih
+kerangka. Untuk sistem dengan izin per-aksi berbasis data, di situlah tes paling berharga —
+bukan di CRUD.
+
+**Menyepakati aturan penamaan sebelum migrasi pertama.** Satu nama folder salah eja ikut
+tertanam di pipeline CI, dua berkas Docker, dan seluruh skrip deploy. Sekarang biaya
+memperbaikinya lebih besar daripada membiarkannya. Pelajaran murah — tapi hanya kalau
+dipelajari sekali.

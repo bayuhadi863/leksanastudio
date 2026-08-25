@@ -1,0 +1,50 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
+    }
+  },
+  "PostgresqlSettings": {
+    "Host": "localhost",
+    "Port": 5437,
+    "Database": "leksana_studio",
+    "Username": "leksana",
+    "Password": "CHANGE_ME"
+  },
+  "Jwt": {
+    "Secret": "CHANGE_ME_use_a_long_random_secret_at_least_32_chars",
+    "Issuer": "leksana-studio-backend",
+    "Audience": "leksana-studio-frontend",
+    "AccessTokenExpirationInMinutes": 60,
+    "RefreshTokenExpirationInDays": 7,
+    "AbsoluteRefreshTokenExpirationInDays": 30
+  },
+  "Redis": {
+    "Host": "localhost",
+    "Port": 6381,
+    "Password": "CHANGE_ME"
+  },
+  "Minio": {
+    "Endpoint": "localhost",
+    "Port": 9010,
+    "AccessKey": "leksana",
+    "SecretKey": "CHANGE_ME",
+    "BucketName": "leksana-studio",
+    "UseSSL": false
+  },
+  "Cors": {
+    "AllowedOrigins": ["http://localhost:3000"]
+  },
+  "Seeder": {
+    "Users": [
+      {
+        "Name": "Bayu Hadi Leksana",
+        "Email": "admin@leksana.id",
+        "Password": "CHANGE_ME",
+        "Roles": ["super-admin"]
+      }
+    ]
+  }
+}

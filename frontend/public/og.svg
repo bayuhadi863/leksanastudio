@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Leksana Studio — Dibangun untuk dipakai bertahun-tahun">
+  <!--
+    Share card. Built from the same palette as the site.
+
+    Deliberately typeset with the renderer's default face rather than shipping
+    font binaries into the card: it has to survive being scaled to a thumbnail
+    in a WhatsApp bubble, where layout and colour carry the identity and the
+    typeface does not.
+  -->
+  <rect width="1200" height="630" fill="#eff1f2"/>
+
+  <g font-family="'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif" fill="#1b2430">
+    <text x="80" y="100" font-size="34" font-weight="700" letter-spacing="-0.68">Leksana<tspan fill="#7a2230">.</tspan></text>
+
+    <rect x="80" y="184" width="64" height="4" fill="#7a2230"/>
+
+    <g font-size="62" font-weight="600" letter-spacing="-1.55">
+      <text x="80" y="272">Website dan sistem web</text>
+      <text x="80" y="339">yang dibangun untuk dipakai</text>
+      <text x="80" y="406">bertahun-tahun.</text>
+    </g>
+
+    <line x1="80" y1="503" x2="1120" y2="503" stroke="#d5dae0" stroke-width="1"/>
+    <text x="80" y="550" font-size="22" fill="#55606d">Bayu Hadi Leksana · Surabaya</text>
+    <text x="1120" y="550" font-size="18" fill="#55606d" text-anchor="end" letter-spacing="1.44">LEKSANA.ID</text>
+  </g>
+</svg>

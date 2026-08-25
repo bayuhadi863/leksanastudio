@@ -1,0 +1,33 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Secrets. Every one of these has a committed `.example` beside it.
+.env
+.env.*
+!.env.example
+backend/src/appsettings.Development.json
+backend/src/appsettings.Production.json
+
+# Platform
+.vercel/
+.vercel
+
+# Local tooling — session notes, editor state, OS litter
+.remember/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Playwright / test artefacts, if any are ever run from the repo
+playwright-report/
+test-results/

@@ -1,0 +1,990 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 scans these for utility classes. Declared explicitly because the
+   stylesheet does not sit at the project root. */
+@source '../../index.html';
+@source '../**/*.{ts,tsx}';
+@source '../content/**/*.mdx';
+
+/* Panel wait state. The only keyframe on the site that is not the margin
+   note's entrance — a rule sweeping, in the same vocabulary. */
+@keyframes loader-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* --- 0. fonts ------------------------------------------------------
+
+   Three roles, five declarations, latin subset only, served from this
+   origin. next/font used to do the self-hosting; here the .woff2 files
+   sit in /public/fonts and are declared by hand — which keeps the promise
+   made on the privacy page: no font request ever leaves this site.
+
+   Spectral is a text serif built for screens — a document face, not an
+   advertising face. Public Sans comes from a government design system,
+   which is exactly the "official but plain" register this site needs.
+   DM Mono is reserved for labels and figures.
+   ------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Spectral';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/spectral-500.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Spectral';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/spectral-600.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* One variable file covers both weights — the browser interpolates the rest. */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/public-sans-variable.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/public-sans-variable.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/dm-mono-400.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* The three variables the @theme block below reads. */
+:root {
+  --font-spectral: 'Spectral';
+  --font-public-sans: 'Public Sans';
+  --font-dm-mono: 'DM Mono';
+}
+
+/* ===================================================================
+   LEKSANA STUDIO — DESIGN SYSTEM
+   Implements blueprint 06b-design-system.md.
+
+   Thesis: the site reads like a working document that someone wrote,
+   signed, and stands behind.
+
+   Layer order:
+   1. palette      raw values, light + dark
+   2. @theme       semantic tokens exposed to Tailwind utilities
+   3. base         element defaults
+   4. typography   the type scale as named roles
+   5. layout       document grid + annotation track (the signature)
+   6. components   only what utilities cannot express cleanly
+   =================================================================== */
+
+/* --- 1. palette ---------------------------------------------------- */
+
+:root {
+  /* Cool document stock. Not white, and deliberately not warm cream. */
+  --paper: #eff1f2;
+  --paper-raised: #f8f9fa;
+  /* Blue-black ink. Never pure black. */
+  --ink: #1b2430;
+  --ink-faint: #55606d;
+  --rule: #d5dae0;
+  /* Oxblood — the colour of a seal on an official document. */
+  --stamp: #7a2230;
+  --stamp-on: #ffffff;
+  --stamp-soft: #f3e4e3;
+
+  --signal-ok: #1b6e4f;
+  --signal-warn: #8a5a00;
+  --signal-danger: #a02418;
+
+  --shadow-near: rgb(27 36 48 / 0.06);
+  --shadow-far: rgb(27 36 48 / 0.1);
+
+  color-scheme: light dark;
+}
+
+/* When the reader forces a theme, native UI — scrollbars, form controls, the
+   overscroll gutter — has to follow, or the page ends up half in each mode. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #151b22;
+    --paper-raised: #1d242c;
+    --ink: #e6e9ec;
+    --ink-faint: #9ba6b2;
+    --rule: #2c3641;
+    --stamp: #d0685e;
+    --stamp-on: #151b22;
+    --stamp-soft: #2c1e1d;
+
+    --signal-ok: #6fbf9b;
+    --signal-warn: #d9a64a;
+    --signal-danger: #e58579;
+
+    --shadow-near: rgb(0 0 0 / 0.4);
+    --shadow-far: rgb(0 0 0 / 0.35);
+  }
+}
+
+/* Explicit override wins in both directions. Every colour above is also
+   defined on bare :root, so no page can end up half-styled. */
+:root[data-theme='dark'] {
+  --paper: #151b22;
+  --paper-raised: #1d242c;
+  --ink: #e6e9ec;
+  --ink-faint: #9ba6b2;
+  --rule: #2c3641;
+  --stamp: #d0685e;
+  --stamp-on: #151b22;
+  --stamp-soft: #2c1e1d;
+
+  --signal-ok: #6fbf9b;
+  --signal-warn: #d9a64a;
+  --signal-danger: #e58579;
+
+  --shadow-near: rgb(0 0 0 / 0.4);
+  --shadow-far: rgb(0 0 0 / 0.35);
+}
+
+/* --- 2. semantic tokens -------------------------------------------- */
+
+@theme {
+  --color-bg: var(--paper);
+  --color-surface: var(--paper-raised);
+  --color-text: var(--ink);
+  --color-muted: var(--ink-faint);
+  --color-line: var(--rule);
+  --color-accent: var(--stamp);
+  --color-accent-fg: var(--stamp-on);
+  --color-accent-soft: var(--stamp-soft);
+  --color-ok: var(--signal-ok);
+  --color-warn: var(--signal-warn);
+  --color-danger: var(--signal-danger);
+
+  --font-display: var(--font-spectral), Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Documents are trimmed, not rounded. 0 reads as broadsheet; 8px+ reads
+     as a consumer app. 2px is the deliberate middle. */
+  --radius-sheet: 2px;
+  --radius-control: 4px;
+
+  --breakpoint-note: 64rem;
+}
+
+:root {
+  /*
+   * Measure drives the grid, not the other way round.
+   *
+   * 55ch, not 62ch: `ch` is the width of "0", which in Public Sans is wider
+   * than an average lowercase glyph. 55ch renders as roughly 65 characters of
+   * Indonesian prose — the number the design system actually asks for.
+   */
+  --measure: 55ch;
+  --note-width: 16.25rem;
+  --note-gap: 3rem;
+  /* Sized so the note track lands near the shell edge instead of leaving a
+     dead strip of paper to its right. */
+  --shell: 68rem;
+  --header-height: 4.5rem;
+
+  /*
+   * Scrollbar ink.
+   *
+   * Derived from the text colour rather than declared per theme, so the dark
+   * palette gets a correct thumb for free. 55% keeps the thumb above the 3:1
+   * contrast floor for non-text controls (WCAG 1.4.11) — the restraint comes
+   * from the bar being 8px wide, not from the thumb being too faint to find.
+   */
+  --scrollbar-thumb: color-mix(in oklab, var(--ink) 55%, var(--paper));
+  --scrollbar-thumb-active: color-mix(in oklab, var(--ink) 75%, var(--paper));
+}
+
+/* --- 2b. type scales ------------------------------------------------
+ *
+ * Two scales, because there are two products in this repository.
+ *
+ * The site is a document: read once, in sequence, at arm's length. It gets a
+ * generous scale and room to breathe, and that is why it reads as considered.
+ *
+ * The panel is a tool: opened twenty times a day, scanned rather than read,
+ * and judged by how much of the work fits on one laptop screen. The same
+ * generous scale there costs the editor a screenful of content per screenful
+ * of paper — two table rows, three fields. So the panel keeps the typeface,
+ * the colour, and the hairlines, and gives up the size.
+ *
+ * Both scales are declared as variables the type roles read, so the switch is
+ * one class and nothing downstream has to know about it. The preview inside
+ * the panel switches back to the site scale, because a preview at tool size
+ * would be a lie about what gets published.
+ * -------------------------------------------------------------------- */
+
+:root,
+.type-scale-site {
+  --type-body-size: clamp(1.0625rem, 1.037rem + 0.114vw, 1.125rem);
+  --type-body-leading: 1.65;
+
+  --type-h1-size: clamp(1.875rem, 1.517rem + 1.591vw, 2.75rem);
+  --type-h1-leading: 1.08;
+  --type-h2-size: clamp(1.5625rem, 1.384rem + 0.795vw, 2rem);
+  --type-h2-leading: 1.15;
+  --type-h3-size: clamp(1.25rem, 1.173rem + 0.341vw, 1.4375rem);
+  --type-h3-leading: 1.3;
+
+  --type-lead-size: clamp(1.15625rem, 1.092rem + 0.284vw, 1.3125rem);
+  --type-small-size: clamp(0.9375rem, 0.917rem + 0.057vw, 0.96875rem);
+  --type-label-size: clamp(0.75rem, 0.729rem + 0.057vw, 0.78125rem);
+  --type-note-size: 0.9375rem;
+
+  /* Buttons and other pressables read the scale too. */
+  --control-height: 2.75rem;
+  --control-px: 1.5rem;
+  --control-text: 1rem;
+}
+
+.type-scale-tool {
+  --type-body-size: 0.9375rem;
+  --type-body-leading: 1.5;
+
+  --type-h1-size: 1.375rem;
+  --type-h1-leading: 1.2;
+  --type-h2-size: 1.125rem;
+  --type-h2-leading: 1.25;
+  --type-h3-size: 1rem;
+  --type-h3-leading: 1.35;
+
+  --type-lead-size: 0.9375rem;
+  --type-small-size: 0.8125rem;
+  --type-label-size: 0.6875rem;
+  --type-note-size: 0.8125rem;
+
+  --control-height: 2.25rem;
+  --control-px: 1rem;
+  --control-text: 0.9375rem;
+}
+
+/* --- 3. base ------------------------------------------------------- */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* A closed dialog stays closed. The user agent hides it with
+     `dialog:not([open]) { display: none }`, which any author-level display
+     utility silently outranks — including a stray `flex` on the element. */
+  dialog:not([open]) {
+    display: none !important;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + 1.5rem);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-leading);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    /* Indonesian has long words; automatic hyphenation guesses badly. */
+    hyphens: none;
+  }
+
+  /* Reserve the height of the sticky WhatsApp bar so it never covers the last
+     lines of a page on a phone. */
+  @media (max-width: 63.99rem) {
+    body {
+      padding-block-end: calc(4.5rem + env(safe-area-inset-bottom));
+    }
+
+    html {
+      scroll-padding-bottom: 5.5rem;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+
+  /* Figures are diagrams here, not photographs. Both must never shift layout. */
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  table {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* --- 4. typography roles ------------------------------------------- */
+
+@layer components {
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.25rem, 1.636rem + 2.727vw, 3.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .type-h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--type-h1-size);
+    line-height: var(--type-h1-leading);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .type-h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--type-h2-size);
+    line-height: var(--type-h2-leading);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .type-h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--type-h3-size);
+    line-height: var(--type-h3-leading);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .type-lead {
+    font-size: var(--type-lead-size);
+    line-height: 1.55;
+    color: var(--color-muted);
+    text-wrap: pretty;
+  }
+
+  .type-small {
+    font-size: var(--type-small-size);
+    line-height: 1.55;
+  }
+
+  /* Labels, metric units, category eyebrows. The only place mono is used. */
+  .type-label {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--type-label-size);
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .type-note {
+    font-size: var(--type-note-size);
+    line-height: 1.5;
+  }
+
+  .numeric {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* --- 5. layout ----------------------------------------------------- */
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: var(--shell);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .shell {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  /*
+   * The document track. Main content is capped at the measure and sits to
+   * the left; annotations occupy the outer track. The asymmetry is the
+   * page's shape before a word is read.
+   */
+  .document {
+    width: 100%;
+    max-width: var(--measure);
+  }
+
+  .document > * + * {
+    margin-block-start: 1.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .document {
+      max-width: calc(var(--measure) + var(--note-gap) + var(--note-width));
+    }
+
+    .document > *:not(.document-wide):not(.annotation) {
+      max-width: var(--measure);
+    }
+  }
+
+  .document-wide {
+    max-width: none;
+  }
+
+  /*
+   * Signature element — see blueprint 06b §6b.2.
+   * Content and its note form one grid row, so the note aligns with the
+   * paragraph it annotates and the DOM order stays readable in sequence.
+   */
+  .annotation {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .annotation {
+      grid-template-columns: var(--measure) var(--note-width);
+      column-gap: var(--note-gap);
+      align-items: start;
+    }
+  }
+
+  .annotation__body {
+    min-width: 0;
+  }
+
+  .annotation__body > * + * {
+    margin-block-start: 1.5rem;
+  }
+
+  /* Authored from MDX the note body arrives as its own paragraphs; spacing
+     lives here so the component does not need to know which it received. */
+  .note__body > * + * {
+    margin-block-start: 0.75rem;
+  }
+
+  .note {
+    border-inline-start: 2px solid var(--color-accent);
+    background-color: var(--color-accent-soft);
+    border-radius: var(--radius-sheet);
+    padding: 1rem 1.125rem;
+  }
+
+  @media (min-width: 64rem) {
+    .note {
+      border-inline-start: 0;
+      background-color: transparent;
+      padding: 0;
+      padding-block-start: 0.35rem;
+    }
+
+    .note::before {
+      content: '';
+      display: block;
+      width: 1rem;
+      height: 2px;
+      background-color: var(--color-accent);
+      margin-block-end: 0.75rem;
+    }
+  }
+
+  /*
+   * The site's entire motion budget. Zero JavaScript: where the browser
+   * supports scroll-driven animation the note fades in, everywhere else it
+   * is simply visible from the start.
+   */
+  @supports (animation-timeline: view()) {
+    @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+      .note {
+        animation: note-enter linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 55%;
+      }
+    }
+  }
+
+  @keyframes note-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Two stacked sections each contribute their padding, so the figure here is
+     half of the gap that actually appears between them. */
+  .section {
+    padding-block: clamp(3.5rem, 2.4rem + 4.9vw, 7rem);
+  }
+
+  .section--tight {
+    padding-block: clamp(2.75rem, 2rem + 3.3vw, 5rem);
+  }
+
+  .rule {
+    border: 0;
+    border-block-start: 1px solid var(--color-line);
+  }
+}
+
+/* --- 6. components ------------------------------------------------- */
+
+@layer components {
+  /* Long-form copy rendered from MDX. */
+  .copy > * + * {
+    margin-block-start: 1.5rem;
+  }
+
+  .copy h2 {
+    font-size: clamp(1.5625rem, 1.384rem + 0.795vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-block-start: 3.5rem;
+  }
+
+  .copy h3 {
+    font-weight: 500;
+    font-size: clamp(1.25rem, 1.173rem + 0.341vw, 1.4375rem);
+    line-height: 1.3;
+    margin-block-start: 2.5rem;
+  }
+
+  .copy h2 + p,
+  .copy h3 + p {
+    margin-block-start: 1rem;
+  }
+
+  .copy ul,
+  .copy ol {
+    padding-inline-start: 1.25rem;
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .copy ul {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+
+  .copy ul > li {
+    position: relative;
+    padding-inline-start: 1.25rem;
+  }
+
+  .copy ul > li::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.7em;
+    width: 0.4rem;
+    height: 1px;
+    background-color: var(--color-accent);
+  }
+
+  .copy ol {
+    list-style: decimal;
+  }
+
+  .copy ol::marker {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .copy strong {
+    font-weight: 600;
+  }
+
+  .copy a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color 150ms ease-out;
+  }
+
+  .copy a:hover {
+    text-decoration-color: transparent;
+  }
+
+  .copy blockquote {
+    border-inline-start: 2px solid var(--color-line);
+    padding-inline-start: 1.25rem;
+    color: var(--color-muted);
+    font-style: normal;
+  }
+
+  .copy code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sheet);
+    padding: 0.1em 0.35em;
+  }
+
+  .copy pre {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sheet);
+    padding: 1.125rem 1.25rem;
+    overflow-x: auto;
+  }
+
+  /* Code is monochrome on purpose: a working document does not use six
+     colours to show one decision. */
+  .copy pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /*
+   * The panel wears the tool scale; anything inside it that shows the published
+   * page wears the site scale again.
+   */
+  .panel-ui {
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-leading);
+  }
+
+  .preview-surface {
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-leading);
+  }
+
+  /*
+   * The tool scale trims controls to about 40px, which is right for a mouse and
+   * short of the 44px a finger needs. Touch gets the height back — the density
+   * was for the laptop, not for the phone, and nobody should have to aim.
+   */
+  @media (pointer: coarse) {
+    .panel-ui :is(input:not(.sr-only), select, textarea, button) {
+      min-height: 2.75rem;
+    }
+  }
+
+  /*
+   * The split editor, compacted.
+   *
+   * Beside a preview the form column is roughly half as wide, and the guidance
+   * notes — written to teach the form the first time it is met — are the first
+   * thing that should give up that space. They are still one click away in
+   * writing mode. Everything that carries the editor's own work stays.
+   */
+  [data-compact='true'] .annotation > .note {
+    display: none;
+  }
+
+  [data-compact='true'] .field-row {
+    column-gap: 1rem;
+  }
+
+  /*
+   * Two fields on one line, actually on one line.
+   *
+   * Side-by-side fields used to be independent boxes stacked top-down, so a
+   * hint that ran to two lines pushed its own input down and left the pair
+   * looking broken — the exact fault a form is judged on before a word of it is
+   * read. Here the row owns four tracks (label · hint · control · error) and
+   * each field hands its own four rows to `subgrid`, so every part lines up
+   * with its opposite number no matter how long the writing gets.
+   *
+   * Below the breakpoint the fields stack, and the whole question disappears:
+   * plain grid rows, ordinary gap. Browsers without subgrid fall back to what
+   * this looked like before — top-aligned and unequal, never broken.
+   */
+  .field-row {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 40rem) {
+    .field-row {
+      grid-template-columns: var(--field-row-columns, repeat(2, minmax(0, 1fr)));
+      column-gap: 1.5rem;
+      row-gap: 0;
+    }
+
+    .field-row > * {
+      grid-row: span 4;
+    }
+
+    .field-row > .field {
+      display: grid;
+      grid-template-rows: subgrid;
+    }
+  }
+
+  /*
+   * The panel borrows the site's annotation track, but not its width.
+   *
+   * On the public site the two-column form turns on at a 64rem viewport, and
+   * that is right there — the page is the only thing on screen. Inside the
+   * panel the rail has already taken 18rem by then, so the same media query
+   * turns the track on in a column too narrow to hold it and pushes the whole
+   * page sideways. Here it is keyed to the container it actually lives in.
+   */
+  #panel-konten,
+  .form-column {
+    container-type: inline-size;
+    container-name: panel-content;
+  }
+
+  /*
+   * `.form-column` is the inner container, and it matters the moment the editor
+   * splits: the panel area stays wide while the form column halves, and a query
+   * asked of the outer one would keep the note track open in a column that can
+   * no longer hold it. The nearest named container wins, which is exactly the
+   * answer needed here.
+   */
+
+  #panel-konten .annotation {
+    grid-template-columns: none;
+  }
+
+  /* Back to the stacked note until the column is genuinely wide enough. */
+  #panel-konten .note {
+    border-inline-start: 2px solid var(--color-accent);
+    background-color: var(--color-accent-soft);
+    padding: 1rem 1.125rem;
+  }
+
+  #panel-konten .note::before {
+    content: none;
+  }
+
+  /*
+   * 55ch measures ~38rem in this typeface, so the pair needs ~57rem; 60rem
+   * leaves slack. `minmax(0, …)` on the body column is the belt to that
+   * braces: if the container is ever a little tighter than the arithmetic
+   * assumed, the column gives way instead of the page.
+   */
+  @container panel-content (min-width: 60rem) {
+    #panel-konten .annotation {
+      grid-template-columns: minmax(0, var(--measure)) var(--note-width);
+      column-gap: var(--note-gap);
+      align-items: start;
+    }
+
+    #panel-konten .note {
+      border-inline-start: 0;
+      background-color: transparent;
+      padding: 0;
+      padding-block-start: 0.35rem;
+    }
+
+    #panel-konten .note::before {
+      content: '';
+      display: block;
+      width: 1rem;
+      height: 2px;
+      background-color: var(--color-accent);
+      margin-block-end: 0.75rem;
+    }
+  }
+
+  /*
+   * Scrollbars, in the document's own materials.
+   *
+   * The platform default is a raised trough with arrow buttons — furniture from
+   * another design system, and on Windows thick enough to read as a second
+   * border down the side of every textarea. `scrollbar-width` and
+   * `scrollbar-color` are the standard properties (Firefox, Chrome 121+,
+   * Safari 18.2+); the WebKit block below is for older Safari only, and the two
+   * never fight because Chrome ignores the pseudo-elements once
+   * `scrollbar-color` is set.
+   *
+   * Deliberately *not* hidden until hover. A scrollbar that appears on hover is
+   * invisible to anyone who cannot hover, and stops telling everyone else that
+   * there is more to read — which is the one job it has.
+   */
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: thin;
+  }
+
+  :root {
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  /*
+   * Inner scrollers darken while the pointer is inside them. The page scroller
+   * is left out on purpose: the pointer is almost always inside the page, so
+   * emphasising it would just be a darker scrollbar all the time.
+   */
+  :where(textarea, pre, dialog, .scroll-x, [class*='overflow-']):hover {
+    scrollbar-color: var(--scrollbar-thumb-active) transparent;
+  }
+
+  /* Older Safari — same look, through the only properties it understands. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 999px;
+    /* Transparent border plus padding-box clipping is what makes the thumb read
+       as a slim capsule with breathing room instead of a full-width slab. */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--scrollbar-thumb-active);
+  }
+
+  /* Forced colours: the reader has already told the system what they need. */
+  @media (forced-colors: active) {
+    *,
+    :root,
+    :where(textarea, pre, dialog, .scroll-x, [class*='overflow-']):hover {
+      scrollbar-color: auto;
+    }
+  }
+
+  /* Wide content scrolls inside its own container. The page never does.
+     `position: relative` is load-bearing, not decoration: absolutely-positioned
+     descendants — every `sr-only` label inside a wide table — resolve against
+     the nearest positioned ancestor, and without one they resolve against the
+     viewport and escape this clip, widening the document. */
+  .scroll-x {
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .copy table {
+    width: 100%;
+    font-size: clamp(0.9375rem, 0.917rem + 0.057vw, 0.96875rem);
+  }
+
+  .copy th,
+  .copy td {
+    text-align: start;
+    padding: 0.75rem 1rem 0.75rem 0;
+    border-block-end: 1px solid var(--color-line);
+    vertical-align: top;
+  }
+
+  .copy th {
+    font-family: var(--font-mono);
+    font-size: 0.78125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+
+  /* Only genuinely floating UI gets a shadow. The shadow colour is a token so
+     it deepens in dark mode instead of disappearing. */
+  .floating {
+    box-shadow:
+      0 1px 2px var(--shadow-near),
+      0 8px 24px var(--shadow-far);
+  }
+}
