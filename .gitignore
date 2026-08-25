@@ -15,6 +15,9 @@ obj/
 .env
 .env.*
 !.env.example
+# Not a secret: the canonical site address and the panel switch for production
+# builds. Reviewable in the repo rather than living only in a dashboard.
+!.env.production
 backend/src/appsettings.Development.json
 backend/src/appsettings.Production.json
 
