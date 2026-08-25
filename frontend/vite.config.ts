@@ -103,15 +103,19 @@ const readingTime: Plugin = {
  * rather than committed so a new service, vertical or article can never be
  * missing from them.
  */
-const sitemap: Plugin = {
+const sitemapPlugin = (siteUrl: string): Plugin => ({
   name: 'leksana-sitemap',
   apply: 'build',
   generateBundle() {
     const root = process.cwd()
-    this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: buildSitemap(root) })
-    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: buildRobots() })
+    this.emitFile({
+      type: 'asset',
+      fileName: 'sitemap.xml',
+      source: buildSitemap(root, new Date(), siteUrl),
+    })
+    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: buildRobots(siteUrl) })
   },
-}
+})
 
 const mdxPlugin = mdx({
   remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
@@ -143,45 +147,59 @@ const mdxModules: Plugin = {
  * import would survive that analysis and ship the whole panel to a site that
  * has no server to talk to.
  */
-const readPanelFlag = (mode: string): boolean => {
-  const value = (loadEnv(mode, process.cwd(), '').VITE_PANEL ?? '').trim().toLowerCase()
+const readPanelFlag = (env: Record<string, string>): boolean => {
+  const value = (env.VITE_PANEL ?? '').trim().toLowerCase()
   return value === 'on' || value === 'true' || value === '1'
 }
 
-export default defineConfig(({ mode }) => ({
-  define: {
-    __PANEL_ENABLED__: JSON.stringify(readPanelFlag(mode)),
-  },
+/**
+ * The canonical address the build should speak in.
+ *
+ * Read here and handed to the sitemap plugin, because that plugin runs in Node
+ * where `import.meta.env` is empty: left to itself it would publish the
+ * placeholder domain from `config/site.ts` on every deployment.
+ */
+const readSiteUrl = (env: Record<string, string>): string =>
+  (env.VITE_SITE_URL ?? 'https://leksana.id').replace(/\/$/, '')
 
-  plugins: [
-    // MDX must run before the React plugin so that the JSX it emits is still
-    // transformed — and Fast Refresh keeps working inside case studies.
-    mdxModules,
-    react({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
-    tailwindcss(),
-    readingTime,
-    themeScript,
-    sitemap,
-    securityHeaders,
-    contactApi,
-  ],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
 
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+  return {
+    define: {
+      __PANEL_ENABLED__: JSON.stringify(readPanelFlag(env)),
     },
-  },
 
-  build: {
-    target: 'es2022',
-    sourcemap: false,
-  },
+    plugins: [
+      // MDX must run before the React plugin so that the JSX it emits is still
+      // transformed — and Fast Refresh keeps working inside case studies.
+      mdxModules,
+      react({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
+      tailwindcss(),
+      readingTime,
+      themeScript,
+      sitemapPlugin(readSiteUrl(env)),
+      securityHeaders,
+      contactApi,
+    ],
 
-  server: {
-    port: 3000,
-  },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
 
-  preview: {
-    port: 3000,
-  },
-}))
+    build: {
+      target: 'es2022',
+      sourcemap: false,
+    },
+
+    server: {
+      port: 3000,
+    },
+
+    preview: {
+      port: 3000,
+    },
+  }
+})

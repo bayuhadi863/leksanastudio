@@ -26,7 +26,17 @@ type SitemapEntry = {
   readonly priority: number
 }
 
-const absolute = (pathname: string): string => new URL(pathname, site.url).toString()
+/**
+ * The canonical host these files should speak in.
+ *
+ * This module runs in Node during the build, where `import.meta.env` is empty —
+ * so `site.url` here is always the fallback in `config/site.ts`, never the value
+ * the browser bundle was given. Read the same variable from the process instead,
+ * or every deployment publishes a sitemap pointing at the placeholder domain.
+ */
+const canonicalHost = (): string => (process.env.VITE_SITE_URL ?? site.url).replace(/\/$/, '')
+
+const absolute = (pathname: string, host: string): string => new URL(pathname, host).toString()
 
 const readFrontmatter = (root: string, folder: string) => {
   const directory = path.join(root, 'src', 'content', folder)
@@ -50,46 +60,46 @@ const isoDate = (value: unknown, fallback: Date): Date => {
   return fallback
 }
 
-export const buildSitemap = (root: string, now = new Date()): string => {
+export const buildSitemap = (root: string, now = new Date(), host = canonicalHost()): string => {
   const caseStudies = readFrontmatter(root, 'studi-kasus')
   const notes = readFrontmatter(root, 'catatan')
 
   const staticPages: readonly SitemapEntry[] = (
     [
-      { url: absolute(routes.home), changeFrequency: 'monthly', priority: 1 },
-      { url: absolute(routes.services), changeFrequency: 'monthly', priority: 0.9 },
-      { url: absolute(routes.work), changeFrequency: 'monthly', priority: 0.9 },
-      { url: absolute(routes.pricing), changeFrequency: 'monthly', priority: 0.8 },
-      { url: absolute(routes.process), changeFrequency: 'yearly', priority: 0.7 },
-      { url: absolute(routes.about), changeFrequency: 'yearly', priority: 0.6 },
-      { url: absolute(routes.contact), changeFrequency: 'yearly', priority: 0.6 },
-      { url: absolute(routes.notes), changeFrequency: 'weekly', priority: 0.7 },
-      { url: absolute(routes.privacy), changeFrequency: 'yearly', priority: 0.2 },
+      { url: absolute(routes.home, host), changeFrequency: 'monthly', priority: 1 },
+      { url: absolute(routes.services, host), changeFrequency: 'monthly', priority: 0.9 },
+      { url: absolute(routes.work, host), changeFrequency: 'monthly', priority: 0.9 },
+      { url: absolute(routes.pricing, host), changeFrequency: 'monthly', priority: 0.8 },
+      { url: absolute(routes.process, host), changeFrequency: 'yearly', priority: 0.7 },
+      { url: absolute(routes.about, host), changeFrequency: 'yearly', priority: 0.6 },
+      { url: absolute(routes.contact, host), changeFrequency: 'yearly', priority: 0.6 },
+      { url: absolute(routes.notes, host), changeFrequency: 'weekly', priority: 0.7 },
+      { url: absolute(routes.privacy, host), changeFrequency: 'yearly', priority: 0.2 },
     ] as const
   ).map((entry) => ({ ...entry, lastModified: now }))
 
   const entries: readonly SitemapEntry[] = [
     ...staticPages,
     ...services.map((service) => ({
-      url: absolute(routes.service(service.slug)),
+      url: absolute(routes.service(service.slug), host),
       lastModified: now,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),
     ...verticals.map((vertical) => ({
-      url: absolute(routes.vertical(vertical.slug)),
+      url: absolute(routes.vertical(vertical.slug), host),
       lastModified: now,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),
     ...caseStudies.map((entry) => ({
-      url: absolute(routes.caseStudy(entry.slug)),
+      url: absolute(routes.caseStudy(entry.slug), host),
       lastModified: isoDate(entry.data.updated, now),
       changeFrequency: 'yearly' as const,
       priority: 0.9,
     })),
     ...notes.map((entry) => ({
-      url: absolute(routes.note(entry.slug)),
+      url: absolute(routes.note(entry.slug), host),
       lastModified: isoDate(entry.data.updated ?? entry.data.published, now),
       changeFrequency: 'yearly' as const,
       priority: 0.6,
@@ -112,7 +122,7 @@ export const buildSitemap = (root: string, now = new Date()): string => {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
 }
 
-export const buildRobots = (): string =>
+export const buildRobots = (host = canonicalHost()): string =>
   [
     'User-Agent: *',
     'Allow: /',
@@ -123,7 +133,7 @@ export const buildRobots = (): string =>
     'Disallow: /panel/',
     'Disallow: /auth/',
     '',
-    `Host: ${site.url}`,
-    `Sitemap: ${site.url}/sitemap.xml`,
+    `Host: ${host}`,
+    `Sitemap: ${host}/sitemap.xml`,
     '',
   ].join('\n')
