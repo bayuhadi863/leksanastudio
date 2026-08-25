@@ -14,12 +14,14 @@ export const config = { runtime: 'nodejs' }
  * Deployment entry point for hosts that run Web-standard serverless functions
  * (Vercel, Netlify, Cloudflare). Locally the same handler is mounted on the
  * Vite dev server instead — see vite.config.ts.
+ *
+ * Exported by method name, not as a default. A default export is read as the
+ * Node signature `(req, res) => void`, and a `Response` returned from one is
+ * discarded — the request simply hangs until the platform times it out. The
+ * named export is what selects the Web-standard signature, and it lets the
+ * platform answer anything that is not a POST on its own.
  */
-export default async function POST(request: Request): Promise<Response> {
-  if (request.method !== 'POST') {
-    return Response.json({ error: 'Metode tidak diizinkan.' }, { status: 405 })
-  }
-
+export async function POST(request: Request): Promise<Response> {
   let payload: unknown
   try {
     payload = await request.json()
