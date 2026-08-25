@@ -1,6 +1,14 @@
-import { clientKeyFrom, handleContact, MALFORMED_BODY } from '../server/contact'
+import { clientKeyFrom, handleContact, MALFORMED_BODY } from '../server/contact.js'
 
 export const config = { runtime: 'nodejs' }
+
+/*
+ * The `.js` on the import above is not a typo. This package is `"type":
+ * "module"`, so the deployed function is a real ES module and Node resolves
+ * specifiers literally — an extensionless path that TypeScript accepts happily
+ * becomes ERR_MODULE_NOT_FOUND at runtime. TypeScript maps the `.js` back to
+ * the `.ts` file; Node gets the name it needs.
+ */
 
 /**
  * Deployment entry point for hosts that run Web-standard serverless functions

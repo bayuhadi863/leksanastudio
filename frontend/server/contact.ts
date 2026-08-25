@@ -1,4 +1,4 @@
-import { contactSchema, type ContactInput } from '../src/lib/contact-schema'
+import { contactSchema, type ContactInput } from '../src/lib/contact-schema.js'
 
 /**
  * Enquiry intake.

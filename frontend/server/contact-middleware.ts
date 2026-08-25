@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import { clientKeyFrom, handleContact, MALFORMED_BODY } from './contact'
+import { clientKeyFrom, handleContact, MALFORMED_BODY } from './contact.js'
 
 const readBody = (request: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
